@@ -1,0 +1,8 @@
+/build/
+/build-*/
+/.qt/
+*.user
+/preview/
+/tools/*.exe
+/release/
+/dist/
