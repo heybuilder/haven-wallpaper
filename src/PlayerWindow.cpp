@@ -5,6 +5,7 @@
 #include "CalmTheme.h"
 #include "ImportSupport.h"
 #include "ImportJob.h"
+#include "YouTubeSetup.h"
 #include <QApplication>
 #include <QAudioOutput>
 #include <QCloseEvent>
@@ -46,6 +47,7 @@ PlayerWindow::PlayerWindow(QWidget* parent) : QMainWindow(parent) {
     setWindowTitle("Haven - Live Wallpaper & Your Day");
     resize(1160,850);setMinimumSize(940,760);
     const auto launchArgs=QCoreApplication::arguments();
+    const int setupTest=launchArgs.indexOf("--setup-test");
     const int dayTest=launchArgs.indexOf("--day-test");
     const QString testStorage=(dayTest>=0 && launchArgs.size()>dayTest+1)?launchArgs.at(dayTest+1)+".json":QString();
     productivity_=new ProductivityModel(this,testStorage);
@@ -101,6 +103,12 @@ PlayerWindow::PlayerWindow(QWidget* parent) : QMainWindow(parent) {
     layout->addLayout(playback);
     auto* cacheButton=new QPushButton("Open downloaded videos folder",root);
     layout->addWidget(cacheButton);
+    auto* setupRow=new QHBoxLayout;
+    auto* setupButton=new QPushButton(YouTubeSetup::ready()?"YouTube imports enabled":"Enable YouTube imports",root);
+    setupButton->setEnabled(!YouTubeSetup::ready());
+    setupButton->setToolTip("Download and verify official yt-dlp and Deno helpers once. Internet required.");
+    auto* setupCancel=new QPushButton("Cancel setup",root);setupCancel->setEnabled(false);
+    setupRow->addWidget(setupButton);setupRow->addWidget(setupCancel);setupRow->addStretch();layout->addLayout(setupRow);
     connect(cacheButton,&QPushButton::clicked,this,[]{
         const auto cache=QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)+"/videos";
         QDir().mkpath(cache);QDesktopServices::openUrl(QUrl::fromLocalFile(cache));
@@ -134,6 +142,17 @@ PlayerWindow::PlayerWindow(QWidget* parent) : QMainWindow(parent) {
     wallpaper_->setWindowFlags(Qt::FramelessWindowHint | Qt::Tool | Qt::WindowDoesNotAcceptFocus);
     wallpaper_->setAttribute(Qt::WA_NativeWindow);wallpaper_->setAspectRatioMode(Qt::KeepAspectRatioByExpanding);
     importer_=new QProcess(this);refreshMonitors();
+    const auto setupRoot=(setupTest>=0 && launchArgs.size()>setupTest+1)?launchArgs.at(setupTest+1)+".tools":QString();
+    youtubeSetup_=new YouTubeSetup(this,setupRoot);
+    connect(youtubeSetup_,&YouTubeSetup::progress,state_,&QLabel::setText);
+    connect(youtubeSetup_,&YouTubeSetup::finished,this,[this,setupButton,setupCancel](bool success,const QString& message){
+        state_->setText(message);setupButton->setText(success?"YouTube imports enabled":"Retry YouTube setup");setupButton->setEnabled(!success);setupCancel->setEnabled(false);importButton_->setEnabled(true);
+    });
+    connect(setupButton,&QPushButton::clicked,this,[this,setupButton,setupCancel]{
+        if(importer_->state()!=QProcess::NotRunning){state_->setText("Finish or cancel the current import before setup.");return;}
+        setupButton->setEnabled(false);setupCancel->setEnabled(true);importButton_->setEnabled(false);youtubeSetup_->start();
+    });
+    connect(setupCancel,&QPushButton::clicked,youtubeSetup_,&YouTubeSetup::cancel);
     connect(importer_,&QProcess::started,this,[this]{
         if(importJob_ && !importJob_->attach(importer_->processId()))importOutput_+="[Haven] Process-tree cleanup could not be attached.\n";
     });
@@ -187,6 +206,12 @@ PlayerWindow::PlayerWindow(QWidget* parent) : QMainWindow(parent) {
         }
     });health->start(3000);
     const auto args=QCoreApplication::arguments();
+    if(setupTest>=0 && args.size()>setupTest+1){
+        const auto report=args.at(setupTest+1);
+        connect(youtubeSetup_,&YouTubeSetup::finished,this,[this,report](bool success,const QString& message){QFile file(report);if(file.open(QIODevice::WriteOnly))file.write((QString(success?"PASS ":"FAIL ")+message).toUtf8());quitApplication();});
+        QTimer::singleShot(500,youtubeSetup_,&YouTubeSetup::start);
+        QTimer::singleShot(180000,this,[this]{youtubeSetup_->cancel();});
+    }
     const int smoke=args.indexOf("--smoke-test");
     if(smoke>=0 && args.size()>smoke+2) {
         const auto report=args.at(smoke+2);
@@ -307,10 +332,11 @@ void PlayerWindow::importYoutube(){
     if(url.isEmpty()) {
         state_->setText("Enter a valid HTTPS YouTube video link.");return;
     }
-    const auto tools=QCoreApplication::applicationDirPath()+"/../tools/";
+    if(youtubeSetup_->busy()){state_->setText("YouTube setup is still running. Please wait or cancel setup.");return;}
+    const auto tools=YouTubeSetup::toolsPath();
     const auto exe=tools+"yt-dlp.exe";
     if(!QFileInfo::exists(exe) || !QFileInfo::exists(tools+"deno.exe")) {
-        state_->setText("YouTube tools are missing. Install yt-dlp.exe and deno.exe in tools beside preview.");return;
+        state_->setText("Click Enable YouTube imports once, then import your video link.");return;
     }
     const auto cache=QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)+"/videos";
     if(!QDir().mkpath(cache)){state_->setText("Cannot create the video cache folder.");return;}

@@ -18,6 +18,7 @@ class QCloseEvent;
 class ProductivityModel;
 class ProductivityDock;
 class ImportJob;
+class YouTubeSetup;
 
 class PlayerWindow final : public QMainWindow
 {
@@ -58,4 +59,5 @@ private:
     bool desktopActive_=false;
     ProductivityModel* productivity_;
     ProductivityDock* dayBar_;
+    YouTubeSetup* youtubeSetup_;
 };

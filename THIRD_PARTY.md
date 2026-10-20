@@ -9,7 +9,7 @@ Haven's own source code is MIT licensed. That license does not replace the licen
 | GCC libstdc++ / libgcc | MinGW GCC 13.1 | GPL v3 with the GCC Runtime Library Exception. https://www.gnu.org/licenses/gcc-exception-3.1.html |
 | MinGW-w64 / winpthreads runtime | supplied with the matching Qt compiler kit | Permissive runtime notices; see included licenses. https://www.mingw-w64.org/ |
 
-The Windows ZIP includes `licenses/`, SBOM/build information and a file manifest. Matching Qt/FFmpeg source archives are available in `Haven-v0.4.0-library-sources.zip` on the same release page, together with the configuration information supplied by the Qt SDK and reported by FFmpeg. These libraries have not been modified by Haven. Compatible dynamic libraries can be replaced; the application does not prohibit reverse engineering for debugging modifications to those libraries.
+The Windows ZIP includes `licenses/`, SBOM/build information and a file manifest. Matching Qt/FFmpeg source archives are available in `Haven-v0.5.0-library-sources.zip` on the same release page, together with the configuration information supplied by the Qt SDK and reported by FFmpeg. These libraries have not been modified by Haven. Compatible dynamic libraries can be replaced; the application does not prohibit reverse engineering for debugging modifications to those libraries.
 
 The release omits Qt's optional software-OpenGL fallback DLL and Microsoft's D3D compiler redistribution DLL; it relies on the Windows system graphics components instead.
 

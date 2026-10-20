@@ -2,13 +2,15 @@
 
 A calm Windows desktop companion: video wallpapers, small intentions, and transparent focus tools.
 
-**Early release v0.4.0 - Windows x64**
+**Early release v0.5.0 - Windows x64**
 
 ## Download and run
 
-1. Download `Haven-v0.4.0-windows-x64.zip` from [Releases](https://github.com/heybuilder/haven-wallpaper/releases).
-2. Extract the entire ZIP to a writable folder.
-3. Open **Start Haven.cmd**, or `app/Haven.exe`.
+1. Download `Haven-Setup-v0.5.0.exe` from [Releases](https://github.com/heybuilder/haven-wallpaper/releases).
+2. Run the installer, then open Haven from the Start menu.
+3. Select a local video and choose **Set as wallpaper**.
+
+A portable ZIP is also available: extract it completely and open **Start Haven.cmd**.
 
 Qt and the C++ runtime are included. No Qt installation or administrator account is required. The app is unsigned. Windows may display its usual reputation notice; verify the release source and checksum before deciding whether to run it.
 
@@ -26,7 +28,7 @@ Nothing applies automatically at startup. Timers reopen paused. Overlays are ord
 
 ## Optional YouTube import
 
-The public ZIP does not bundle the third-party downloader/runtime executables. Install those optional helpers directly from their official projects using `tools/Install-YouTube-Tools.ps1`, or follow `tools/README.md`. Then restart Haven and paste a public YouTube video link. Imports are cached locally, prefer MP4, and are limited to 1080p / 1 GB. Some imports have no audio; restricted or unavailable videos can fail. Only import content you are permitted to use.
+Click **Enable YouTube imports** inside Haven once. The app downloads the optional helpers from their official GitHub releases and verifies their pinned SHA-256 checksums. Then paste a public YouTube video link and click **Import YouTube**. Internet access is required for setup and imports. Imports are cached locally, prefer MP4, and are limited to 1080p / 1 GB. Restricted or unavailable videos can fail. Only import content you are permitted to use.
 
 ## Privacy
 
@@ -34,7 +36,7 @@ Tasks, goals, preferences, and imported clips are saved on your computer. Haven 
 
 ## Build
 
-Requires Windows, C++17, CMake 3.21+, and Qt 6.5+ Widgets / Multimedia / MultimediaWidgets. Use a compiler that matches your Qt kit.
+Requires Windows, C++17, CMake 3.21+, and Qt 6.5+ Widgets / Network / Multimedia / MultimediaWidgets. Use a compiler that matches your Qt kit.
 
 ```powershell
 cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH="C:/Qt/6.12.0/mingw_64" -DCMAKE_BUILD_TYPE=Release
@@ -46,7 +48,7 @@ Run from the kit's build environment, including its compiler, Ninja and Qt DLL p
 
 ## Status and limitations
 
-This is an early development release tested on the development machine, not a broadly certified Windows product. Explorer desktop attachment uses undocumented Windows behavior and may need reapplying after Explorer or display changes. One wallpaper/monitor is active at a time. There is no installer, signing, auto-update, start-with-Windows feature, or automatic fullscreen/battery pause yet.
+This is an early development release tested on the development machine, not a broadly certified Windows product. Explorer desktop attachment uses undocumented Windows behavior and may need reapplying after Explorer or display changes. One wallpaper/monitor is active at a time. There is no signing, auto-update, start-with-Windows feature, or automatic fullscreen/battery pause yet.
 
 ## License
 

@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.21)
-project(LiveWallpaper VERSION 0.4.0 LANGUAGES CXX)
+project(LiveWallpaper VERSION 0.5.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets Multimedia MultimediaWidgets)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets Network Multimedia MultimediaWidgets)
 qt_standard_project_setup()
 
 qt_add_executable(LiveWallpaper
@@ -25,9 +25,11 @@ qt_add_executable(LiveWallpaper
     src/ImportSupport.cpp
     src/ImportJob.h
     src/ImportJob.cpp
+    src/YouTubeSetup.h
+    src/YouTubeSetup.cpp
 )
 target_link_libraries(LiveWallpaper PRIVATE
-    Qt6::Widgets Qt6::Multimedia Qt6::MultimediaWidgets user32
+    Qt6::Widgets Qt6::Network Qt6::Multimedia Qt6::MultimediaWidgets user32
 )
 set_target_properties(LiveWallpaper PROPERTIES WIN32_EXECUTABLE TRUE)
 
