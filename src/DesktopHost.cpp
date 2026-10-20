@@ -74,3 +74,14 @@ void DesktopHost::detach(WId id) {
 bool DesktopHost::attached(WId id) {
     HWND parent=GetParent(reinterpret_cast<HWND>(id)); return parent && IsWindow(parent);
 }
+
+bool DesktopHost::fitMonitor(WId id,const QString& monitor){
+ auto window=reinterpret_cast<HWND>(id);const auto parent=GetParent(window);
+ if(!parent || !IsWindow(parent))return false;
+ MonitorSearch search;search.name=monitor;EnumDisplayMonitors(nullptr,nullptr,collectMonitor,reinterpret_cast<LPARAM>(&search));
+ if(!search.found)return false;
+ RECT current{};GetWindowRect(window,&current);const auto target=search.rect;
+ if(EqualRect(&current,&target))return true;
+ POINT origin{target.left,target.top};if(!ScreenToClient(parent,&origin))return false;
+ return SetWindowPos(window,HWND_BOTTOM,origin.x,origin.y,target.right-target.left,target.bottom-target.top,SWP_NOACTIVATE|SWP_SHOWWINDOW)!=0;
+}

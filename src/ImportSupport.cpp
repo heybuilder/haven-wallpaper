@@ -16,7 +16,7 @@ QUrl ImportSupport::normalizeYoutube(const QString& input){
 QString ImportSupport::formatSelector(){
     // Avoid selecting multi-gigabyte 4K formats. No merging dependency is needed.
     const QString limit="[height<=1080][filesize<=?1G][filesize_approx<=?1G]";
-    return "best[ext=mp4]"+limit+"/bestvideo[ext=mp4]"+limit+"/best"+limit+"/bestvideo"+limit;
+    return "best[ext=mp4][vcodec^=avc1]"+limit+"/bestvideo[ext=mp4][vcodec^=avc1]"+limit;
 }
 QString ImportSupport::completedPath(const QString& output,const QString& folder){
     const auto root=QDir(folder).canonicalPath()+"/";

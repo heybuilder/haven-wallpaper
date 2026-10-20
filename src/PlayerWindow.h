@@ -4,7 +4,8 @@
 #include <QByteArray>
 #include <memory>
 
-class QMediaPlayer;
+class QTimer;
+class MediaController;
 class QPushButton;
 class QAudioOutput;
 class QVideoWidget;
@@ -34,16 +35,18 @@ private:
     void addVideo(const QString& path);
     void playSelected(bool wallpaper);
     void removeWallpaper();
+    void failPlayback(const QString& message);
+    void acceptVideoFrame();
     void importYoutube();
     void saveLibrary();
     void refreshMonitors();
     void quitApplication();
 
-    QMediaPlayer* player_;
+    MediaController* player_;
     QPushButton* playButton_;
     QAudioOutput* audio_;
-    QVideoWidget* preview_;
-    QVideoWidget* wallpaper_;
+    QWidget* preview_;
+    QWidget* wallpaper_;
     QPushButton* importButton_;
     QListWidget* library_;
     QLineEdit* url_;
@@ -57,6 +60,14 @@ private:
     bool importCancelled_=false;
     std::unique_ptr<ImportJob> importJob_;
     bool desktopActive_=false;
+    bool pendingWallpaper_=false;
+    bool waitingForFrame_=false;
+    bool loadingLibrary_=false;
+    bool testing_=false;
+    QString requestedMonitor_;
+    QTimer* playbackDeadline_;
+    qint64 lastFrameAt_=0;
+    quint64 playbackRequest_=0;
     ProductivityModel* productivity_;
     ProductivityDock* dayBar_;
     YouTubeSetup* youtubeSetup_;

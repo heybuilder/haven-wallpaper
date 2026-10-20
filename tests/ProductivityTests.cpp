@@ -51,5 +51,9 @@ int main(int argc,char** argv){
         restored.remove(restored.intentions().front().id);check(restored.count(false)==0,"remove selected intention only");
     }
     check(ProductivityModel::displayTime(25000)=="00:25" && ProductivityModel::displayTime(3600000)=="01:00:00","clock formatting handles hours");
+    const auto broken=temporary.path()+"/broken.json";
+    {QFile file(broken);check(file.open(QIODevice::WriteOnly),"create unreadable-state fixture");file.write("{broken");}
+    {ProductivityModel model(nullptr,broken);model.add("Must not replace unreadable data",false);check(!model.storageError().isEmpty(),"unreadable state reports a storage error");}
+    {QFile file(broken);check(file.open(QIODevice::ReadOnly),"reopen unreadable-state fixture");check(file.readAll()=="{broken","unreadable state survives edits and shutdown without overwrite");}
     return failures?1:0;
 }

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LiveWallpaper VERSION 0.5.0 LANGUAGES CXX)
+project(LiveWallpaper VERSION 0.6.2 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -9,6 +9,7 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets Network Multimedia MultimediaWi
 qt_standard_project_setup()
 
 qt_add_executable(LiveWallpaper
+    src/MediaController.cpp src/MediaController.h
     src/main.cpp
     src/PlayerWindow.cpp
     src/PlayerWindow.h

@@ -6,4 +6,5 @@ public:
     static bool attach(WId window, const QString& monitor, QString& error);
     static void detach(WId window);
     static bool attached(WId window);
+    static bool fitMonitor(WId window,const QString& monitor);
 };

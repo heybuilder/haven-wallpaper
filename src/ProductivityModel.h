@@ -60,6 +60,7 @@ private:
     QString theme_="Sage morning";
     QString path_;
     QString storageError_;
+    bool storageReadable_=true;
     int timerMinutes_=10,focusMinutes_=25,shortMinutes_=5,longMinutes_=15;
     int phase_=0,rounds_=0;
     qint64 lastDisplay_=-1,lastSave_=0;

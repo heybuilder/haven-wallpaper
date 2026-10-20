@@ -21,6 +21,8 @@
 #include <QMouseEvent>
 #include <QGraphicsDropShadowEffect>
 #include <QVBoxLayout>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 namespace {
 QLabel* label(const QString& text,const QString& name,QWidget* parent){auto* result=new QLabel(text,parent);result->setObjectName(name);result->setWordWrap(true);return result;}
@@ -45,7 +47,7 @@ ProductivityPanel::ProductivityPanel(ProductivityModel* model,QWidget* parent):Q
         auto* add=new QPushButton("Add",page);inputRow->addWidget(input,1);inputRow->addWidget(add);column->addLayout(inputRow);
         auto* list=new QListWidget(page);list->setAccessibleName(goal?"Goals":"Tasks");column->addWidget(list,1);
         auto* remove=new QPushButton(goal?"Remove selected goal":"Remove selected task",page);column->addWidget(remove);
-        auto submit=[this,input,goal]{if(!input->text().trimmed().isEmpty()){model_->add(input->text(),goal);input->clear();}};
+        auto submit=[this,input,goal]{if(!input->text().trimmed().isEmpty()){model_->add(input->text(),goal);input->clear();emit toolRequested(goal?1:0);}};
         connect(add,&QPushButton::clicked,this,submit);connect(input,&QLineEdit::returnPressed,this,submit);
         connect(list,&QListWidget::itemChanged,this,[this](QListWidgetItem* item){const auto id=item->data(Qt::UserRole).toString();const bool done=item->checkState()==Qt::Checked;QTimer::singleShot(0,this,[this,id,done]{model_->setDone(id,done);});});
         connect(remove,&QPushButton::clicked,this,[this,list]{if(auto* item=list->currentItem())model_->remove(item->data(Qt::UserRole).toString());});
@@ -59,7 +61,7 @@ ProductivityPanel::ProductivityPanel(ProductivityModel* model,QWidget* parent):Q
     auto* pomoPage=new QWidget;auto* pomo=new QVBoxLayout(pomoPage);
     phaseText_=label("","muted",pomoPage);phaseText_->setAlignment(Qt::AlignCenter);pomo->addWidget(phaseText_);
     pomodoroText_=label("25:00","clock",pomoPage);pomodoroText_->setAlignment(Qt::AlignCenter);pomo->addWidget(pomodoroText_);
-    auto* pomoActions=new QHBoxLayout;pomodoroStart_=new QPushButton("Begin",pomoPage);pomodoroStart_->setProperty("primary",true);
+    auto* pomoActions=new QHBoxLayout;pomodoroStart_=new QPushButton("Begin",pomoPage);pomodoroStart_->setProperty("primary",true);pomodoroStart_->setAccessibleName("Start or pause Pomodoro");
     auto* reset=new QPushButton("Reset",pomoPage);auto* skip=new QPushButton("Next phase",pomoPage);
     pomoActions->addWidget(pomodoroStart_);pomoActions->addWidget(reset);pomoActions->addWidget(skip);pomo->addLayout(pomoActions);
     auto* durations=new QHBoxLayout;
@@ -67,7 +69,7 @@ ProductivityPanel::ProductivityPanel(ProductivityModel* model,QWidget* parent):Q
     focus_=duration("Focus",180);short_=duration("Short rest",60);long_=duration("Long rest",120);pomo->addLayout(durations);
     roundsText_=label("","muted",pomoPage);roundsText_->setAlignment(Qt::AlignCenter);pomo->addWidget(roundsText_);
     auto* guidance=label("A focus period, then a little rest. After four completed focuses, take a longer break. Start each phase when you feel ready.","muted",pomoPage);pomo->addWidget(guidance);pomo->addStretch();
-    connect(pomodoroStart_,&QPushButton::clicked,model_,&ProductivityModel::togglePomodoro);
+    connect(pomodoroStart_,&QPushButton::clicked,this,[this]{model_->togglePomodoro();if(model_->pomodoroRunning())emit toolRequested(2);});
     connect(reset,&QPushButton::clicked,model_,&ProductivityModel::resetPomodoro);connect(skip,&QPushButton::clicked,model_,&ProductivityModel::skipPomodoro);
     auto setDurations=[this]{model_->setPomodoroMinutes(focus_->value(),short_->value(),long_->value());};
     connect(focus_,&QSpinBox::valueChanged,this,setDurations);connect(short_,&QSpinBox::valueChanged,this,setDurations);connect(long_,&QSpinBox::valueChanged,this,setDurations);
@@ -76,15 +78,15 @@ ProductivityPanel::ProductivityPanel(ProductivityModel* model,QWidget* parent):Q
     timerLayout->addWidget(label("A little time for whatever you need.","muted",timerPage));
     timerText_=label("10:00","clock",timerPage);timerText_->setAlignment(Qt::AlignCenter);timerLayout->addWidget(timerText_);
     timerMinutes_=minutes(timerPage,180,"Countdown duration");timerLayout->addWidget(timerMinutes_);
-    auto* timerActions=new QHBoxLayout;timerStart_=new QPushButton("Begin",timerPage);timerStart_->setProperty("primary",true);auto* timerReset=new QPushButton("Reset",timerPage);
+    auto* timerActions=new QHBoxLayout;timerStart_=new QPushButton("Begin",timerPage);timerStart_->setProperty("primary",true);timerStart_->setAccessibleName("Start or pause countdown");auto* timerReset=new QPushButton("Reset",timerPage);
     timerActions->addWidget(timerStart_);timerActions->addWidget(timerReset);timerLayout->addLayout(timerActions);timerLayout->addStretch();clocks->addTab(timerPage,"Timer");
     connect(timerMinutes_,&QSpinBox::valueChanged,model_,&ProductivityModel::setTimerMinutes);
-    connect(timerStart_,&QPushButton::clicked,model_,&ProductivityModel::toggleTimer);connect(timerReset,&QPushButton::clicked,model_,&ProductivityModel::resetTimer);
+    connect(timerStart_,&QPushButton::clicked,this,[this]{model_->toggleTimer();if(model_->timerRunning())emit toolRequested(2);});connect(timerReset,&QPushButton::clicked,model_,&ProductivityModel::resetTimer);
     auto* stopwatchPage=new QWidget;auto* watch=new QVBoxLayout(stopwatchPage);watch->addWidget(label("Let time unfold. No finish line needed.","muted",stopwatchPage));
     stopwatchText_=label("00:00","clock",stopwatchPage);stopwatchText_->setAlignment(Qt::AlignCenter);watch->addWidget(stopwatchText_);
-    auto* watchActions=new QHBoxLayout;stopwatchStart_=new QPushButton("Begin",stopwatchPage);stopwatchStart_->setProperty("primary",true);auto* watchReset=new QPushButton("Reset",stopwatchPage);
+    auto* watchActions=new QHBoxLayout;stopwatchStart_=new QPushButton("Begin",stopwatchPage);stopwatchStart_->setProperty("primary",true);stopwatchStart_->setAccessibleName("Start or pause stopwatch");auto* watchReset=new QPushButton("Reset",stopwatchPage);
     watchActions->addWidget(stopwatchStart_);watchActions->addWidget(watchReset);watch->addLayout(watchActions);watch->addStretch();clocks->addTab(stopwatchPage,"Stopwatch");
-    connect(stopwatchStart_,&QPushButton::clicked,model_,&ProductivityModel::toggleStopwatch);connect(watchReset,&QPushButton::clicked,model_,&ProductivityModel::resetStopwatch);
+    connect(stopwatchStart_,&QPushButton::clicked,this,[this]{model_->toggleStopwatch();if(model_->stopwatchRunning())emit toolRequested(2);});connect(watchReset,&QPushButton::clicked,model_,&ProductivityModel::resetStopwatch);
     layout->addWidget(clockCard,1);
     connect(model_,&ProductivityModel::intentionsChanged,this,&ProductivityPanel::refreshIntentions);
     connect(model_,&ProductivityModel::clocksChanged,this,&ProductivityPanel::refreshClocks);
@@ -159,7 +161,7 @@ ProductivityDock::ProductivityDock(ProductivityModel* model,QWidget* parent)
 ProductivityDock::~ProductivityDock(){savePreferences();}
 void ProductivityDock::savePreferences(){
     if(QCoreApplication::arguments().contains("--day-test"))return;
-    QSettings settings;settings.setValue("overlay/enabled",enabled_);settings.setValue("overlay/tasks",showTasks_);settings.setValue("overlay/goals",showGoals_);settings.setValue("overlay/corner",corner_);
+    QSettings settings;settings.setValue("overlay/enabled",enabled_);settings.setValue("overlay/tasks",showTasks_);settings.setValue("overlay/goals",showGoals_);settings.setValue("overlay/corner",corner_);settings.sync();
 }
 void ProductivityDock::setOverlayEnabled(bool value){enabled_=value;savePreferences();refresh();}
 void ProductivityDock::setTasksVisible(bool value){showTasks_=value;savePreferences();refreshLists();}
@@ -205,7 +207,19 @@ void ProductivityDock::anchor(){
     if(customPosition_)move(qBound(minX,x(),maxX),qBound(minY,y(),maxY));
     else move(corner_.endsWith("right")?maxX:minX,corner_.startsWith("Bottom")?maxY:minY);
 }
-void ProductivityDock::reveal(){enabled_=true;savePreferences();refresh();}
+void ProductivityDock::reveal(){enabled_=true;savePreferences();revealIfActive();}
+void ProductivityDock::revealIfActive(){
+    refresh();
+    if(!isVisible())return;
+    // Explorer or startup window ordering can hide a native tool window without
+    // changing QWidget::isVisible(). Restore the native surface without focus.
+    if(isMinimized())setWindowState(windowState() & ~Qt::WindowMinimized);
+    show();raise();
+    auto handle=reinterpret_cast<HWND>(winId());
+    ShowWindow(handle,SW_SHOWNOACTIVATE);
+    SetWindowPos(handle,HWND_TOP,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+}
+bool ProductivityDock::desktopVisible()const{return isVisible() && IsWindowVisible(reinterpret_cast<HWND>(effectiveWinId()));}
 void ProductivityDock::mousePressEvent(QMouseEvent* event){
     if(event->button()==Qt::LeftButton){dragging_=true;dragOffset_=event->globalPosition().toPoint()-frameGeometry().topLeft();event->accept();}
 }
@@ -213,4 +227,8 @@ void ProductivityDock::mouseMoveEvent(QMouseEvent* event){
     if(dragging_){customPosition_=true;move(event->globalPosition().toPoint()-dragOffset_);event->accept();}
 }
 void ProductivityDock::mouseReleaseEvent(QMouseEvent* event){dragging_=false;anchor();event->accept();}
-void ProductivityDock::closeEvent(QCloseEvent* event){if(property("quitting").toBool()){event->accept();return;}setOverlayEnabled(false);event->ignore();}
+void ProductivityDock::closeEvent(QCloseEvent* event){
+    // Window/session teardown is not a request to change the saved overlay choice.
+    if(property("quitting").toBool() || qApp->isSavingSession() || QCoreApplication::closingDown()){event->accept();return;}
+    hide();event->ignore();
+}

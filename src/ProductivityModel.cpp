@@ -72,6 +72,7 @@ void ProductivityModel::update(){
     arm();
 }
 void ProductivityModel::save(){
+    if(!storageReadable_){emit notice(storageError_);return;}
     QJsonArray entries;for(const auto& item:items_)entries.append(QJsonObject{{"id",item.id},{"text",item.text},{"done",item.done},{"goal",item.goal}});
     QJsonObject root{{"version",1},{"items",entries},{"theme",theme_},{"timerMinutes",timerMinutes_},
         {"focusMinutes",focusMinutes_},{"shortMinutes",shortMinutes_},{"longMinutes",longMinutes_},{"phase",phase_},{"rounds",rounds_},
@@ -83,10 +84,10 @@ void ProductivityModel::save(){
 }
 void ProductivityModel::load(){
     QFile file(path_);if(!file.exists())return;
-    if(!file.open(QIODevice::ReadOnly)){storageError_="Could not open your saved tasks.";return;}
+    if(!file.open(QIODevice::ReadOnly)){storageReadable_=false;storageError_="Could not open your saved tasks. Existing data has not been overwritten.";return;}
     QJsonParseError error;const auto doc=QJsonDocument::fromJson(file.readAll(),&error);
     if(error.error!=QJsonParseError::NoError || !doc.isObject()){
-        storageError_="Saved tasks could not be read. A backup has been kept.";
+        storageReadable_=false;storageError_="Saved tasks could not be read. Original data has been preserved.";
         file.close();QFile::copy(path_,path_+".unreadable-backup");return;
     }
     const auto root=doc.object();

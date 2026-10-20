@@ -1,6 +1,6 @@
 # Privacy
 
-Haven v0.5.0 stores task and goal entries, completion states, clock snapshots, preferences, and imported video files locally. These are not bundled with the app when it is shared.
+Haven v0.6.2 stores task and goal entries, completion states, clock snapshots, preferences, and imported video files locally. These are not bundled with the app when it is shared.
 
 Haven has no account system, telemetry, or analytics. It does not upload your task and goal data. Local file selections refer to files on your own computer.
 

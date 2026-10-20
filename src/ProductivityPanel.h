@@ -14,8 +14,11 @@ class QComboBox;
 class QTabWidget;
 
 class ProductivityPanel final : public QWidget {
+    Q_OBJECT
 public:
     explicit ProductivityPanel(ProductivityModel* model,QWidget* parent=nullptr);
+signals:
+    void toolRequested(int tool);
 private:
     void refreshIntentions();void refreshClocks();
     ProductivityModel* model_;
@@ -33,6 +36,8 @@ public:
     explicit ProductivityDock(ProductivityModel* model,QWidget* parent=nullptr);
     ~ProductivityDock() override;
     void reveal();
+    void revealIfActive();
+    bool desktopVisible() const;
     void setOverlayEnabled(bool enabled);
     void setTasksVisible(bool visible);
     void setGoalsVisible(bool visible);
